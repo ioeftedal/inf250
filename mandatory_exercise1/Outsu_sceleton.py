@@ -8,8 +8,8 @@ at NMBU (Autumn 2017).
 __author__ = "Ivar Eftedal"
 __email__ = "ivar.odegardstuen.eftedal@nmbu.com"
 
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
 from skimage import io
 from skimage.filters import threshold_otsu
 
@@ -85,33 +85,33 @@ def histogram(image):
 
 def otsu(image):
     """Finds the optimal thresholdvalue of given image using Otsu's method."""
-    hist = histogram(image)
 
-    final_thresh = -1
+    hist, bins = np.histogram(image, np.arange(0, 256))
+    th = -1
     final_value = -1
 
     pixel_number = image.shape[0] * image.shape[1]
     mean_weight = 1.0 / pixel_number
-    his, bins = np.histogram(image, np.arange(0, 257))
-    intensity_arr = np.arange(256)
+    intensity_arr = np.arange(255)
     for t in bins[1:-1]:
-        pcb = np.sum(his[:t])
-        pcf = np.sum(his[t:])
+        # bg = background, fg = foreground
+        bg_probability = np.sum(hist[:t])
+        fg_probability = np.sum(hist[t:])
 
-        Wb = pcb * mean_weight
-        Wf = pcf * mean_weight
+        bg_weight = bg_probability * mean_weight
+        fg_weight = fg_probability * mean_weight
 
-        mub = np.sum(intensity_arr[:t] * his[:t]) / float(pcb)
-        muf = np.sum(intensity_arr[t:] * his[t:]) / float(pcf)
+        bg_mean_intensity = np.sum(intensity_arr[:t] * hist[:t]) / float(bg_probability)
+        fg_mean_intensity = np.sum(intensity_arr[t:] * hist[t:]) / float(fg_probability)
 
-        value = Wb * Wf * (mub - muf) ** 2
+        # Between class variance value:
+        value = bg_weight * fg_weight * (bg_mean_intensity - fg_mean_intensity) ** 2
 
         if value > final_value:
-            final_thresh = t
+            th = t
             final_value = value
-    final_img = image.copy()
 
-    return final_thresh
+    return th
 
 
 # Display image
@@ -123,9 +123,9 @@ histogram_plot = histogram(fall)
 plt.plot(histogram_plot)
 plt.show()
 
-# Otsu value
+# Outsu value
 outsu_value = otsu(fall)
-print(outsu_value)
+print(f"Outsu value calculated: {outsu_value}")
 
 
 # Display binarized image
